@@ -26,3 +26,5 @@ Here you have two algorithms to choose from:
 In general it is very difficult to get efficient cache behavior for multidimensional multiplication, and often using `permutedims` is the best strategy.
 However, there are cases where in-place operations are faster.
 It's a good idea to time both and see which works better for your case.
+
+There are optimized implementations for when `M` is a sparse matrix and when it is a 2x2 matrix.

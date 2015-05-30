@@ -49,8 +49,10 @@ function _A_mul_B_md!(dest, M::AbstractMatrix, src, R2::CartesianRange)
     if m == n == 2
         return _A_mul_B_md_2x2!(dest, M, src, R2)
     end
-    fill!(dest, 0)
     for I2 in R2
+        @inbounds for i = 1:m
+            dest[i,I2] = 0
+        end
         @inbounds for j = 1:n
             b = src[j,I2]
             @simd for i = 1:m
@@ -68,6 +70,25 @@ function _A_mul_B_md_2x2!(dest, M::AbstractMatrix, src, R2::CartesianRange)
             s1, s2 = src[1,I2], src[2,I2]
             dest[1,I2] = a*s1 + b*s2
             dest[2,I2] = c*s1 + d*s2
+        end
+    end
+    dest
+end
+
+function _A_mul_B_md!(dest, M::SparseMatrixCSC, src, R2::CartesianRange)
+    m, n = size(M,1), size(M,2)
+    nzv = M.nzval
+    rv = M.rowval
+    cp = M.colptr
+    for I2 in R2
+        @inbounds for i = 1:m
+            dest[i,I2] = 0
+        end
+        for j = 1:n
+            b = src[j,I2]
+            @inbounds for k = cp[j]:(cp[j+1]-1)
+                dest[rv[k],I2] += nzv[k]*b
+            end
         end
     end
     dest
@@ -101,6 +122,25 @@ function _A_mul_B_md_2x2!(dest, M::AbstractMatrix, src,  R1::CartesianRange, R2:
                 s1, s2 = src[I1,1,I2], src[I1,2,I2]
                 dest[I1,1,I2] = a*s1 + b*s2
                 dest[I1,2,I2] = c*s1 + d*s2
+            end
+        end
+    end
+    dest
+end
+
+function _A_mul_B_md!(dest, M::SparseMatrixCSC, src, R1::CartesianRange, R2::CartesianRange)
+    m, n = size(M,1), size(M,2)
+    nzv = M.nzval
+    rv = M.rowval
+    cp = M.colptr
+    fill!(dest, 0)
+    for I2 in R2
+        for j = 1:n
+            @inbounds for k = cp[j]:(cp[j+1]-1)
+                i, Mij = rv[k], nzv[k]
+                @simd for I1 in R1
+                    dest[I1,i,I2] += Mij*src[I1,j,I2]
+                end
             end
         end
     end

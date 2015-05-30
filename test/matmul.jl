@@ -1,17 +1,20 @@
 n = 5
 m = 3
 src = rand(n,n,n)
-M = rand(m,n)
-for dim = 1:3
-    dest1 = mapslices(b->M*b, src, dim)
-    sz = fill(n,3)
-    sz[dim] = m
-    dest2 = rand(sz...)
-    FilterMD.A_mul_B_md!(dest2, M, src, dim)
-    @test_approx_eq dest1 dest2
-    rand!(dest2)
-    FilterMD.A_mul_B_perm!(dest2, M, src, dim)
-    @test_approx_eq dest1 dest2
+for M in (rand(m,n), sprand(m,n,0.2))
+    for dim = 1:3
+        dest1 = mapslices(b->M*b, src, dim)
+        sz = fill(n,3)
+        sz[dim] = m
+        dest2 = rand(sz...)
+        FilterMD.A_mul_B_md!(dest2, M, src, dim)
+        @test_approx_eq dest1 dest2
+        if !issparse(M)
+            rand!(dest2)
+            FilterMD.A_mul_B_perm!(dest2, M, src, dim)
+            @test_approx_eq dest1 dest2
+        end
+    end
 end
 
 # Test size-checking
