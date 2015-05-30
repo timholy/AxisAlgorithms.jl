@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/timholy/FilterMD.jl.svg?branch=master)](https://travis-ci.org/timholy/FilterMD.jl)
 [![Coverage Status](https://coveralls.io/repos/timholy/FilterMD.jl/badge.svg)](https://coveralls.io/r/timholy/FilterMD.jl)
 
-FilterMD is a collection of linear algebra algorithms for multidimensional arrays.
+FilterMD is a collection of filtering and linear algebra algorithms for multidimensional arrays.
 For algorithms that would typically apply along the columns of a matrix, you can instead pick an arbitrary dimension.
 
 Note that all functions come in two variants, a `!` version that uses pre-allocated output (where the output is

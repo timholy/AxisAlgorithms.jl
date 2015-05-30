@@ -30,8 +30,10 @@ storing the result in `dest`. `M` must be an `AbstractMatrix`. This uses an in-p
 """ ->
 function A_mul_B_md!(dest, M::AbstractMatrix, src, dim::Integer)
     check_matmul_sizes(dest, M, src, dim)
+    if size(M,1) == size(M,2) == 1
+        return scale!(dest, src, M[1,1])
+    end
     R2 = CartesianRange(size(dest)[dim+1:end])
-    fill!(dest, 0)
     if dim > 1
         R1 = CartesianRange(size(dest)[1:dim-1])
         _A_mul_B_md!(dest, M, src, R1, R2)
@@ -44,6 +46,10 @@ end
 # Here we expect that M will typically be small and fit in cache, whereas src and dest do not
 function _A_mul_B_md!(dest, M::AbstractMatrix, src, R2::CartesianRange)
     m, n = size(M, 1), size(M, 2)
+    if m == n == 2
+        return _A_mul_B_md_2x2!(dest, M, src, R2)
+    end
+    fill!(dest, 0)
     for I2 in R2
         @inbounds for j = 1:n
             b = src[j,I2]
@@ -55,10 +61,25 @@ function _A_mul_B_md!(dest, M::AbstractMatrix, src, R2::CartesianRange)
     dest
 end
 
+function _A_mul_B_md_2x2!(dest, M::AbstractMatrix, src, R2::CartesianRange)
+    a, b, c, d = M[1,1], M[1,2], M[2,1], M[2,2]
+    @simd for I2 in R2
+        @inbounds begin
+            s1, s2 = src[1,I2], src[2,I2]
+            dest[1,I2] = a*s1 + b*s2
+            dest[2,I2] = c*s1 + d*s2
+        end
+    end
+    dest
+end
+
 # Multiplication along any other dimension
-# Here we expect that M will typically be small and fit in cache, whereas src and dest do not
 function _A_mul_B_md!(dest, M::AbstractMatrix, src,  R1::CartesianRange, R2::CartesianRange)
     m, n = size(M, 1), size(M, 2)
+    if m == n == 2
+        return _A_mul_B_md_2x2!(dest, M, src, R1, R2)
+    end
+    fill!(dest, 0)
     for I2 in R2
         for j = 1:n
             @inbounds for i = 1:m
@@ -66,6 +87,20 @@ function _A_mul_B_md!(dest, M::AbstractMatrix, src,  R1::CartesianRange, R2::Car
                 @simd for I1 in R1
                     dest[I1,i,I2] += Mij*src[I1,j,I2]
                 end
+            end
+        end
+    end
+    dest
+end
+
+function _A_mul_B_md_2x2!(dest, M::AbstractMatrix, src,  R1::CartesianRange, R2::CartesianRange)
+    a, b, c, d = M[1,1], M[1,2], M[2,1], M[2,2]
+    for I2 in R2
+        @simd for I1 in R1
+            @inbounds begin
+                s1, s2 = src[I1,1,I2], src[I1,2,I2]
+                dest[I1,1,I2] = a*s1 + b*s2
+                dest[I1,2,I2] = c*s1 + d*s2
             end
         end
     end
