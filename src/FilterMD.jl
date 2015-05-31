@@ -32,10 +32,11 @@ dimension ordering. In many cases, this algorithm exhibits the best cache behavi
 """ ->
 A_mul_B_perm(M::AbstractMatrix, src, dim::Integer) = A_mul_B_perm!(alloc_matmul(M,src,dim), M, src, dim)
 
-function alloc_matmul(M,src,dim)
+function alloc_matmul{S,N}(M,src::AbstractArray{S,N},dim)
     sz = [size(src)...]
     sz[dim] = size(M,1)
-    Array(promote_type(eltype(M), eltype(src)), sz...)
+    T = promote_type(eltype(M), S)
+    Array(T, sz...)::Array{T,N}
 end
 
 include("tridiag.jl")

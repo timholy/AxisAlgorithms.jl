@@ -5,10 +5,14 @@ function _A_ldiv_B_md!(dest, W::Woodbury, src,  R1, R2)
     tmp3 = _A_mul_B_md(W.U, tmp2, R1, R2)
     # TODO?: would be nice to fuse the next two steps
     tmp4 = _A_ldiv_B_md(W.A, tmp3, R1, R2)
-    for I in eachindex(dest, tmp4)
-        dest[I] -= tmp4[I]
+    sub!(dest, tmp4)
+end
+
+function sub!(A, B)
+    for I in eachindex(A, B)
+        A[I] -= B[I]
     end
-    dest
+    A
 end
 
 check_matrix(W::Woodbury) = check_matrix(W.A)
