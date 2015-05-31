@@ -3,22 +3,24 @@ import Base.LinAlg.LU, Base.getindex, Base.setindex!
 @doc """
 `A_ldiv_B_md!(dest, F, src, dim)` solves a tridiagonal system along dimension `dim` of `src`,
 storing the result in `dest`. Currently, `F` must be an LU-factorized tridiagonal matrix.
+If desired, you may safely use the same array for both `src` and `dest`, so that this becomes an
+in-place algorithm.
 """ ->
-function A_ldiv_B_md!{T}(dest, F::LU{T,Tridiagonal{T}}, src, dim::Integer)
+function A_ldiv_B_md!(dest, F, src, dim::Integer)
     1 <= dim <= max(ndims(dest),ndims(src)) || throw(DimensionMismatch("The chosen dimension $dim is larger than $(ndims(src)) and $(ndims(dest))"))
     n = size(F, 1)
     n == size(src, dim) && n == size(dest, dim) || throw(DimensionMismatch("Sizes $n, $(size(src,dim)), and $(size(dest,dim)) do not match"))
     size(dest) == size(src) || throw(DimensionMismatch("Sizes $(size(dest)), $(size(src)) do not match"))
-    for i = 1:n
-        F.ipiv[i] == i || error("For efficiency, pivoting is not supported")
-    end
+    check_matrix(F)
     R1 = CartesianRange(size(dest)[1:dim-1])
     R2 = CartesianRange(size(dest)[dim+1:end])
     _A_ldiv_B_md!(dest, F, src, R1, R2)
 end
+_A_ldiv_B_md(F, src, R1::CartesianRange, R2::CartesianRange) =
+    _A_ldiv_B_md!(similar(src, promote_type(eltype(F), eltype(src))), F, src, R1, R2)
 
 # Filtering along the first dimension
-function _A_ldiv_B_md!{T,CI<:CartesianIndex{0}}(dest, F::LU{T,Tridiagonal{T}}, src,  R1::CartesianRange{CI}, R2)
+function _A_ldiv_B_md!{T,CI<:CartesianIndex{0}}(dest, F::LU{T,Tridiagonal{T}}, src,  R1::CartesianRange{CI}, R2::CartesianRange)
     n = size(F, 1)
     dl = F.factors.dl
     d  = F.factors.d
@@ -26,7 +28,7 @@ function _A_ldiv_B_md!{T,CI<:CartesianIndex{0}}(dest, F::LU{T,Tridiagonal{T}}, s
     # Forward substitution
     @inbounds for I2 in R2
         dest[1, I2] = src[1, I2]
-        for i = 2:n
+        for i = 2:n       # note: cannot use @simd here!
             dest[i, I2] = src[i, I2] - dl[i-1]*dest[i-1, I2]
         end
     end
@@ -34,7 +36,7 @@ function _A_ldiv_B_md!{T,CI<:CartesianIndex{0}}(dest, F::LU{T,Tridiagonal{T}}, s
     dinv = 1./d
     @inbounds for I2 in R2
         dest[n, I2] /= d[n]
-        for i = n-1:-1:1
+        for i = n-1:-1:1  # note: cannot use @simd here!
             dest[i, I2] = (dest[i, I2] - du[i]*dest[i+1, I2])*dinv[i]
         end
     end
@@ -42,7 +44,7 @@ function _A_ldiv_B_md!{T,CI<:CartesianIndex{0}}(dest, F::LU{T,Tridiagonal{T}}, s
 end
 
 # Filtering along any other dimension
-function _A_ldiv_B_md!{T}(dest, F::LU{T,Tridiagonal{T}}, src, R1, R2)
+function _A_ldiv_B_md!{T}(dest, F::LU{T,Tridiagonal{T}}, src, R1::CartesianRange, R2::CartesianRange)
     n = size(F, 1)
     dl = F.factors.dl
     d  = F.factors.d
@@ -62,7 +64,6 @@ function _A_ldiv_B_md!{T}(dest, F::LU{T,Tridiagonal{T}}, src, R1, R2)
     dinv = 1./d
     for I2 in R2
         @simd for I1 in R1
-#             dest[I1, n, I2] /= d[n]
             dest[I1, n, I2] *= dinv[n]
         end
         for i = n-1:-1:1
@@ -72,4 +73,12 @@ function _A_ldiv_B_md!{T}(dest, F::LU{T,Tridiagonal{T}}, src, R1, R2)
         end
     end
     dest
+end
+
+function check_matrix{T}(F::LU{T,Tridiagonal{T}})
+    n = size(F,1)
+    for i = 1:n
+        F.ipiv[i] == i || error("For efficiency, pivoting is not supported")
+    end
+    nothing
 end

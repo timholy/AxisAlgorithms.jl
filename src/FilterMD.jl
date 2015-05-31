@@ -1,5 +1,7 @@
 module FilterMD
 
+using WoodburyMatrices
+
 export A_ldiv_B_md!,
     A_ldiv_B_md,
     A_mul_B_md!,
@@ -8,9 +10,9 @@ export A_ldiv_B_md!,
     A_mul_B_perm
 
 @doc """
-`A_ldiv_B_md(F, src, dim)` solves a tridiagonal system along dimension `dim` of `src`,
+`A_ldiv_B_md(F, src, dim)` solves `F\b` for slices `b` of `src` along dimension `dim`,
 storing the result along the same dimension of the output.
-Currently, `F` must be an LU-factorized tridiagonal matrix.
+Currently, `F` must be an LU-factorized tridiagonal matrix or a Woodbury matrix.
 """ ->
 A_ldiv_B_md(F, src, dim::Integer) = A_ldiv_B_md!(similar(src), F, src, dim)
 
@@ -38,5 +40,6 @@ end
 
 include("tridiag.jl")
 include("matmul.jl")
+include("woodbury.jl")
 
 end # module

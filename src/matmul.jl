@@ -1,6 +1,6 @@
 import Base.LinAlg.LU, Base.getindex, Base.setindex!
 
-# Consider permutedims as an alternative to in-place multiplication.
+# Consider permutedims as an alternative to direct multiplication.
 # Multiplication is an O(m*N) cost compared to an O(N) cost for tridiagonal algorithms.
 # However, when the multiplication is only a small fraction of the total time
 # (for example, when m is small), then these can be convenient and avoid the need for calls to permutedims.
@@ -23,7 +23,7 @@ function A_mul_B_perm!(dest, M::AbstractMatrix, src, dim::Integer)
     dest
 end
 
-# In-place multiplication
+# Direct (temporary-free) multiplication
 @doc """
 `A_mul_B_md!(dest, M, src, dim)` computes `M*x` for slices `x` of `src` along dimension `dim`,
 storing the result in `dest`. `M` must be an `AbstractMatrix`. This uses an in-place naive algorithm.
@@ -62,6 +62,7 @@ function _A_mul_B_md!(dest, M::AbstractMatrix, src, R2::CartesianRange)
     end
     dest
 end
+_A_mul_B_md(M::AbstractMatrix, src, R2::CartesianRange) = _A_mul_B_md!(alloc_matmul(M, src, 1), M, src, R2)
 
 function _A_mul_B_md_2x2!(dest, M::AbstractMatrix, src, R2::CartesianRange)
     a, b, c, d = M[1,1], M[1,2], M[2,1], M[2,2]
@@ -113,6 +114,7 @@ function _A_mul_B_md!(dest, M::AbstractMatrix, src,  R1::CartesianRange, R2::Car
     end
     dest
 end
+_A_mul_B_md(M::AbstractMatrix, src,  R1::CartesianRange, R2::CartesianRange) = _A_mul_B_md!(alloc_matmul(M, src, ndims(R1)+1), M, src, R1, R2)
 
 function _A_mul_B_md_2x2!(dest, M::AbstractMatrix, src,  R1::CartesianRange, R2::CartesianRange)
     a, b, c, d = M[1,1], M[1,2], M[2,1], M[2,2]
