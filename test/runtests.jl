@@ -1,4 +1,4 @@
-using FilterMD
+using AxisAlgorithms
 using Base.Test
 
 include("tridiag.jl")

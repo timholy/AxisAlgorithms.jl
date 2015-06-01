@@ -1,4 +1,4 @@
-module FilterMD
+module AxisAlgorithms
 
 using WoodburyMatrices
 
