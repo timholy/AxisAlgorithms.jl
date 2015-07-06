@@ -51,7 +51,7 @@ function _A_mul_B_md!(dest, M::AbstractMatrix, src, R2::CartesianRange)
     end
     for I2 in R2
         @inbounds for i = 1:m
-            dest[i,I2] = 0
+            dest[i,I2] = zero(eltype(dest))
         end
         @inbounds for j = 1:n
             b = src[j,I2]
@@ -83,7 +83,7 @@ function _A_mul_B_md!(dest, M::SparseMatrixCSC, src, R2::CartesianRange)
     cp = M.colptr
     for I2 in R2
         @inbounds for i = 1:m
-            dest[i,I2] = 0
+            dest[i,I2] = zero(eltype(dest))
         end
         for j = 1:n
             b = src[j,I2]
@@ -101,7 +101,7 @@ function _A_mul_B_md!(dest, M::AbstractMatrix, src,  R1::CartesianRange, R2::Car
     if m == n == 2
         return _A_mul_B_md_2x2!(dest, M, src, R1, R2)
     end
-    fill!(dest, 0)
+    fill!(dest, zero(eltype(dest)))
     for I2 in R2
         for j = 1:n
             @inbounds for i = 1:m
@@ -135,7 +135,7 @@ function _A_mul_B_md!(dest, M::SparseMatrixCSC, src, R1::CartesianRange, R2::Car
     nzv = M.nzval
     rv = M.rowval
     cp = M.colptr
-    fill!(dest, 0)
+    fill!(dest, zero(eltype(dest)))
     for I2 in R2
         for j = 1:n
             @inbounds for k = cp[j]:(cp[j+1]-1)
