@@ -1,7 +1,7 @@
 # AxisAlgorithms
 
 [![Build Status](https://travis-ci.org/timholy/AxisAlgorithms.jl.svg?branch=master)](https://travis-ci.org/timholy/AxisAlgorithms.jl)
-[![Coverage Status](https://coveralls.io/repos/timholy/AxisAlgorithms.jl/badge.svg)](https://coveralls.io/r/timholy/AxisAlgorithms.jl)
+[![codecov](https://codecov.io/gh/timholy/AxisAlgorithms.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/timholy/AxisAlgorithms.jl)
 
 AxisAlgorithms is a collection of filtering and linear algebra algorithms for multidimensional arrays.
 For algorithms that would typically apply along the columns of a matrix, you can instead pick an arbitrary axis (dimension).
