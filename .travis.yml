@@ -13,4 +13,4 @@ notifications:
 #  - julia --check-bounds=yes -e 'Pkg.clone(pwd()); Pkg.build("AxisAlgorithms"); Pkg.test("AxisAlgorithms"; coverage=true)'
 after_success:
   # push coverage results to Codecov
-  - julia -e 'cd(Pkg.dir("ImagesAxes")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
+  - julia -e 'cd(Pkg.dir("AxisAlgorithms")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
