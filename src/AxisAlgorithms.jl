@@ -37,7 +37,7 @@ A_mul_B_perm(M::AbstractMatrix, src, dim::Integer) = A_mul_B_perm!(alloc_matmul(
 function alloc_matmul{S,N}(M,src::AbstractArray{S,N},dim)
     sz = [size(src)...]
     sz[dim] = size(M,1)
-    T = Base.promote_op(Base.MulFun, eltype(M), S)
+    T = Base.promote_op(Base.MulFun(), eltype(M), S)
     Array(T, sz...)::Array{T,N}
 end
 
