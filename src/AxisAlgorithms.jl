@@ -39,7 +39,7 @@ function alloc_matmul{S,N}(M,src::AbstractArray{S,N},dim)
     sz = [size(src)...]
     sz[dim] = size(M,1)
     T = Base.promote_op(@functorize(*), eltype(M), S) # functorize macro used to support julia 0.4
-    Array(T, sz...)::Array{T,N}
+    VERSION < v"0.5.0" ? Array{T}(sz...) : Array{T,N}(sz...)
 end
 
 include("tridiag.jl")
