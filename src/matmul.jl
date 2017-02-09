@@ -16,7 +16,7 @@ function A_mul_B_perm!(dest, M::AbstractMatrix, src, dim::Integer)
     check_matmul_sizes(dest, M, src, dim)
     order = [dim; setdiff(1:ndims(src), dim)]
     srcp = permutedims(src, order)
-    tmp = Array(eltype(dest), size(dest, dim), div(length(dest), size(dest, dim)))
+    tmp = Array{eltype(dest), 2}( size(dest, dim), div(length(dest), size(dest, dim)))
     A_mul_B!(tmp, M, reshape(srcp, (size(src,dim), div(length(srcp), size(src,dim)))))
     iorder = [2:dim; 1; dim+1:ndims(src)]
     permutedims!(dest, reshape(tmp, size(dest)[order]), iorder)
@@ -161,4 +161,3 @@ function check_matmul_sizes(dest, M::AbstractMatrix, src, dim)
     end
     nothing
 end
-
