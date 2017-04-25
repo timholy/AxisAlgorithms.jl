@@ -12,8 +12,8 @@ W = Woodbury(F, U, C, V)
 
 src = rand(5, 8)
 @test W\src ≈ AxisAlgorithms.A_ldiv_B_md(W, src, 1)
-src = rand(5, 5, 5)
-for dim = 1:3
+src = rand((5, 5, 5, 5))
+for dim = 1:4
     dest1 = mapslices(x->W\x, copy(src), dim)
     dest2 = similar(src)
     AxisAlgorithms.A_ldiv_B_md!(dest2, W, src, dim)
