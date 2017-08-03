@@ -1,11 +1,11 @@
 import Base.LinAlg.LU, Base.getindex, Base.setindex!
 
-@doc """
+"""
 `A_ldiv_B_md!(dest, F, src, dim)` solves a tridiagonal system along dimension `dim` of `src`,
 storing the result in `dest`. Currently, `F` must be an LU-factorized tridiagonal matrix.
 If desired, you may safely use the same array for both `src` and `dest`, so that this becomes an
 in-place algorithm.
-""" ->
+"""
 function A_ldiv_B_md!(dest, F, src, dim::Integer)
     1 <= dim <= max(ndims(dest),ndims(src)) || throw(DimensionMismatch("The chosen dimension $dim is larger than $(ndims(src)) and $(ndims(dest))"))
     n = size(F, 1)

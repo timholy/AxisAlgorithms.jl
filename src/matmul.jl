@@ -6,12 +6,12 @@ import Base.LinAlg.LU, Base.getindex, Base.setindex!
 # (for example, when m is small), then these can be convenient and avoid the need for calls to permutedims.
 
 # Multiplication using permutedims
-@doc """
+"""
 `A_mul_B_perm!(dest, M, src, dim)` computes `M*x` for slices `x` of `src` along dimension `dim`,
 storing the result in `dest`. `M` must be an `AbstractMatrix`. This uses `permutedims` to make dimension
 `dim` into the first dimension, performs a standard matrix multiplication, and restores the original
 dimension ordering. In many cases, this algorithm exhibits the best cache behavior.
-""" ->
+"""
 function A_mul_B_perm!(dest, M::AbstractMatrix, src, dim::Integer)
     check_matmul_sizes(dest, M, src, dim)
     order = [dim; setdiff(1:ndims(src), dim)]
@@ -24,10 +24,10 @@ function A_mul_B_perm!(dest, M::AbstractMatrix, src, dim::Integer)
 end
 
 # Direct (temporary-free) multiplication
-@doc """
+"""
 `A_mul_B_md!(dest, M, src, dim)` computes `M*x` for slices `x` of `src` along dimension `dim`,
 storing the result in `dest`. `M` must be an `AbstractMatrix`. This uses an in-place naive algorithm.
-""" ->
+"""
 function A_mul_B_md!(dest, M::AbstractMatrix, src, dim::Integer)
     check_matmul_sizes(dest, M, src, dim)
     if size(M,1) == size(M,2) == 1
