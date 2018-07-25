@@ -1,8 +1,10 @@
-isdefined(Base, :__precompile__) && __precompile__()
+__precompile__()
 
 module AxisAlgorithms
 
 using WoodburyMatrices
+using Compat
+using Compat.LinearAlgebra, Compat.SparseArrays
 
 export A_ldiv_B_md!,
     A_ldiv_B_md,
@@ -34,11 +36,11 @@ dimension ordering. In many cases, this algorithm exhibits the best cache behavi
 """
 A_mul_B_perm(M::AbstractMatrix, src, dim::Integer) = A_mul_B_perm!(alloc_matmul(M,src,dim), M, src, dim)
 
-function alloc_matmul{S,N}(M,src::AbstractArray{S,N},dim)
+function alloc_matmul(M,src::AbstractArray{S,N},dim) where {S,N}
     sz = [size(src)...]
     sz[dim] = size(M,1)
     T = Base.promote_op(*, eltype(M), S)
-    Array{T,N}(sz...)
+    Array{T,N}(undef, sz...)
 end
 
 include("tridiag.jl")

@@ -1,4 +1,10 @@
-import Base.LinAlg.LU, Base.getindex, Base.setindex!
+@static if VERSION < v"0.7.0-DEV.481"
+    const _mul! = isdefined(:mul!) ? mul! : Base.A_mul_B!
+    const _mul2! = isdefined(:mul!) ? mul! : Base.scale!
+else
+    const _mul! = (@isdefined mul!) ? mul! : Base.A_mul_B!
+    const _mul2! = (@isdefined mul!) ? mul! : scale.A_mul_B!
+end
 
 # Consider permutedims as an alternative to direct multiplication.
 # Multiplication is an O(m*N) cost compared to an O(N) cost for tridiagonal algorithms.
@@ -16,8 +22,8 @@ function A_mul_B_perm!(dest, M::AbstractMatrix, src, dim::Integer)
     check_matmul_sizes(dest, M, src, dim)
     order = [dim; setdiff(1:ndims(src), dim)]
     srcp = permutedims(src, order)
-    tmp = Array{eltype(dest), 2}( size(dest, dim), div(length(dest), size(dest, dim)))
-    A_mul_B!(tmp, M, reshape(srcp, (size(src,dim), div(length(srcp), size(src,dim)))))
+    tmp = Array{eltype(dest), 2}(undef, size(dest, dim), div(length(dest), size(dest, dim)))
+    _mul!(tmp, M, reshape(srcp, (size(src,dim), div(length(srcp), size(src,dim)))))
     iorder = [2:dim; 1; dim+1:ndims(src)]
     permutedims!(dest, reshape(tmp, size(dest)[order]), iorder)
     dest
@@ -31,11 +37,11 @@ storing the result in `dest`. `M` must be an `AbstractMatrix`. This uses an in-p
 function A_mul_B_md!(dest, M::AbstractMatrix, src, dim::Integer)
     check_matmul_sizes(dest, M, src, dim)
     if size(M,1) == size(M,2) == 1
-        return scale!(dest, src, M[1,1])
+        return _mul2!(dest, src, M[1,1])
     end
-    R2 = CartesianRange(size(dest)[dim+1:end])
+    R2 = CartesianIndices(size(dest)[dim+1:end])
     if dim > 1
-        R1 = CartesianRange(size(dest)[1:dim-1])
+        R1 = CartesianIndices(size(dest)[1:dim-1])
         _A_mul_B_md!(dest, M, src, R1, R2)
     else
         _A_mul_B_md!(dest, M, src, R2)
@@ -44,7 +50,7 @@ end
 
 # Multiplication along the first dimension
 # Here we expect that M will typically be small and fit in cache, whereas src and dest do not
-function _A_mul_B_md!(dest, M::AbstractMatrix, src, R2::CartesianRange)
+function _A_mul_B_md!(dest, M::AbstractMatrix, src, R2::CartesianIndices)
     m, n = size(M, 1), size(M, 2)
     if m == n == 2
         return _A_mul_B_md_2x2!(dest, M, src, R2)
@@ -62,9 +68,9 @@ function _A_mul_B_md!(dest, M::AbstractMatrix, src, R2::CartesianRange)
     end
     dest
 end
-_A_mul_B_md(M::AbstractMatrix, src, R2::CartesianRange) = _A_mul_B_md!(alloc_matmul(M, src, 1), M, src, R2)
+_A_mul_B_md(M::AbstractMatrix, src, R2::CartesianIndices) = _A_mul_B_md!(alloc_matmul(M, src, 1), M, src, R2)
 
-function _A_mul_B_md_2x2!(dest, M::AbstractMatrix, src, R2::CartesianRange)
+function _A_mul_B_md_2x2!(dest, M::AbstractMatrix, src, R2::CartesianIndices)
     a, b, c, d = M[1,1], M[1,2], M[2,1], M[2,2]
     @simd for I2 in R2
         @inbounds begin
@@ -76,7 +82,7 @@ function _A_mul_B_md_2x2!(dest, M::AbstractMatrix, src, R2::CartesianRange)
     dest
 end
 
-function _A_mul_B_md!(dest, M::SparseMatrixCSC, src, R2::CartesianRange)
+function _A_mul_B_md!(dest, M::SparseMatrixCSC, src, R2::CartesianIndices)
     m, n = size(M,1), size(M,2)
     nzv = M.nzval
     rv = M.rowval
@@ -96,7 +102,7 @@ function _A_mul_B_md!(dest, M::SparseMatrixCSC, src, R2::CartesianRange)
 end
 
 # Multiplication along any other dimension
-function _A_mul_B_md!(dest, M::AbstractMatrix, src,  R1::CartesianRange, R2::CartesianRange)
+function _A_mul_B_md!(dest, M::AbstractMatrix, src,  R1::CartesianIndices, R2::CartesianIndices)
     m, n = size(M, 1), size(M, 2)
     if m == n == 2
         return _A_mul_B_md_2x2!(dest, M, src, R1, R2)
@@ -114,9 +120,9 @@ function _A_mul_B_md!(dest, M::AbstractMatrix, src,  R1::CartesianRange, R2::Car
     end
     dest
 end
-_A_mul_B_md(M::AbstractMatrix, src,  R1::CartesianRange, R2::CartesianRange) = _A_mul_B_md!(alloc_matmul(M, src, ndims(R1)+1), M, src, R1, R2)
+_A_mul_B_md(M::AbstractMatrix, src,  R1::CartesianIndices, R2::CartesianIndices) = _A_mul_B_md!(alloc_matmul(M, src, ndims(R1)+1), M, src, R1, R2)
 
-function _A_mul_B_md_2x2!(dest, M::AbstractMatrix, src,  R1::CartesianRange, R2::CartesianRange)
+function _A_mul_B_md_2x2!(dest, M::AbstractMatrix, src,  R1::CartesianIndices, R2::CartesianIndices)
     a, b, c, d = M[1,1], M[1,2], M[2,1], M[2,2]
     for I2 in R2
         @simd for I1 in R1
@@ -130,7 +136,7 @@ function _A_mul_B_md_2x2!(dest, M::AbstractMatrix, src,  R1::CartesianRange, R2:
     dest
 end
 
-function _A_mul_B_md!(dest, M::SparseMatrixCSC, src, R1::CartesianRange, R2::CartesianRange)
+function _A_mul_B_md!(dest, M::SparseMatrixCSC, src, R1::CartesianIndices, R2::CartesianIndices)
     m, n = size(M,1), size(M,2)
     nzv = M.nzval
     rv = M.rowval
