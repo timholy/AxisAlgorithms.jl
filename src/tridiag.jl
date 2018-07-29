@@ -1,5 +1,3 @@
-import Base.LinAlg.LU, Base.getindex, Base.setindex!
-
 """
 `A_ldiv_B_md!(dest, F, src, dim)` solves a tridiagonal system along dimension `dim` of `src`,
 storing the result in `dest`. Currently, `F` must be an LU-factorized tridiagonal matrix.
@@ -12,15 +10,15 @@ function A_ldiv_B_md!(dest, F, src, dim::Integer)
     n == size(src, dim) && n == size(dest, dim) || throw(DimensionMismatch("Sizes $n, $(size(src,dim)), and $(size(dest,dim)) do not match"))
     size(dest) == size(src) || throw(DimensionMismatch("Sizes $(size(dest)), $(size(src)) do not match"))
     check_matrix(F)
-    R1 = CartesianRange(size(dest)[1:dim-1])
-    R2 = CartesianRange(size(dest)[dim+1:end])
+    R1 = CartesianIndices(size(dest)[1:dim-1])
+    R2 = CartesianIndices(size(dest)[dim+1:end])
     _A_ldiv_B_md!(dest, F, src, R1, R2)
 end
-_A_ldiv_B_md(F, src, R1::CartesianRange, R2::CartesianRange) =
+_A_ldiv_B_md(F, src, R1::CartesianIndices, R2::CartesianIndices) =
     _A_ldiv_B_md!(similar(src, promote_type(eltype(F), eltype(src))), F, src, R1, R2)
 
 # Solving along the first dimension
-function _A_ldiv_B_md!{T,CI<:CartesianIndex{0}}(dest, F::LU{T,Tridiagonal{T}}, src,  R1::CartesianRange{CI}, R2::CartesianRange)
+function _A_ldiv_B_md!(dest, F::LU{T,<:Tridiagonal{T}}, src,  R1::CartesianIndices{<:CartesianIndex{0}}, R2::CartesianIndices) where {T}
     n = size(F, 1)
     dl = F.factors.dl
     d  = F.factors.d
@@ -33,7 +31,7 @@ function _A_ldiv_B_md!{T,CI<:CartesianIndex{0}}(dest, F::LU{T,Tridiagonal{T}}, s
         end
     end
     # Backward substitution
-    dinv = 1./d
+    dinv = 1 ./ d
     @inbounds for I2 in R2
         dest[n, I2] /= d[n]
         for i = n-1:-1:1  # note: cannot use @simd here!
@@ -44,7 +42,7 @@ function _A_ldiv_B_md!{T,CI<:CartesianIndex{0}}(dest, F::LU{T,Tridiagonal{T}}, s
 end
 
 # Solving along any other dimension
-function _A_ldiv_B_md!{T}(dest, F::LU{T,Tridiagonal{T}}, src, R1::CartesianRange, R2::CartesianRange)
+function _A_ldiv_B_md!(dest, F::LU{T,<:Tridiagonal{T}}, src, R1::CartesianIndices, R2::CartesianIndices) where {T}
     n = size(F, 1)
     dl = F.factors.dl
     d  = F.factors.d
@@ -61,7 +59,7 @@ function _A_ldiv_B_md!{T}(dest, F::LU{T,Tridiagonal{T}}, src, R1::CartesianRange
         end
     end
     # Backward substitution
-    dinv = 1./d
+    dinv = 1 ./ d
     for I2 in R2
         @simd for I1 in R1
             dest[I1, n, I2] *= dinv[n]
@@ -75,7 +73,7 @@ function _A_ldiv_B_md!{T}(dest, F::LU{T,Tridiagonal{T}}, src, R1::CartesianRange
     dest
 end
 
-function check_matrix{T}(F::LU{T,Tridiagonal{T}})
+function check_matrix(F::LU{T,<:Tridiagonal{T}}) where {T}
     n = size(F,1)
     for i = 1:n
         F.ipiv[i] == i || error("For efficiency, pivoting is not supported")
