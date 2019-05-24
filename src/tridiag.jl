@@ -18,7 +18,7 @@ _A_ldiv_B_md(F, src, R1::CartesianIndices, R2::CartesianIndices) =
     _A_ldiv_B_md!(similar(src, promote_type(eltype(F), eltype(src))), F, src, R1, R2)
 
 # Solving along the first dimension
-function _A_ldiv_B_md!(dest, F::LU{T,<:Tridiagonal{T}}, src,  R1::CartesianIndices{<:CartesianIndex{0}}, R2::CartesianIndices) where {T}
+function _A_ldiv_B_md!(dest, F::LU{T,<:Tridiagonal{T}}, src,  R1::CartesianIndices{0}, R2::CartesianIndices) where {T}
     n = size(F, 1)
     dl = F.factors.dl
     d  = F.factors.d
