@@ -3,8 +3,8 @@ os:
   - linux
   - osx
 julia:
-  - 0.6
-  - 0.7
+  - 1.0
+  - 1.1
   - nightly
 notifications:
   email: false
@@ -14,4 +14,4 @@ notifications:
 #  - julia --check-bounds=yes -e 'Pkg.clone(pwd()); Pkg.build("AxisAlgorithms"); Pkg.test("AxisAlgorithms"; coverage=true)'
 after_success:
   # push coverage results to Codecov
-  - julia -e 'cd(Pkg.dir("AxisAlgorithms")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
+  - julia -e 'import Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'

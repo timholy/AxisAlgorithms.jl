@@ -1,10 +1,7 @@
-__precompile__()
-
 module AxisAlgorithms
 
 using WoodburyMatrices
-using Compat
-using Compat.LinearAlgebra, Compat.SparseArrays
+using LinearAlgebra, SparseArrays
 
 export A_ldiv_B_md!,
     A_ldiv_B_md,
