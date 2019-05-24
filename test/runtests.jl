@@ -1,5 +1,5 @@
-using AxisAlgorithms, Compat
-using Compat.Test, Compat.LinearAlgebra, Compat.SparseArrays, Compat.Random
+using AxisAlgorithms
+using Test, LinearAlgebra, SparseArrays, Random
 
 include("tridiag.jl")
 include("matmul.jl")
