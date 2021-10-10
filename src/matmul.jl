@@ -1,11 +1,3 @@
-@static if VERSION < v"0.7.0-DEV.481"
-    const _mul! = isdefined(:mul!) ? mul! : Base.A_mul_B!
-    const _mul2! = isdefined(:mul!) ? mul! : Base.scale!
-else
-    const _mul! = (@isdefined mul!) ? mul! : Base.A_mul_B!
-    const _mul2! = (@isdefined mul!) ? mul! : scale.A_mul_B!
-end
-
 # Consider permutedims as an alternative to direct multiplication.
 # Multiplication is an O(m*N) cost compared to an O(N) cost for tridiagonal algorithms.
 # However, when the multiplication is only a small fraction of the total time
@@ -23,7 +15,7 @@ function A_mul_B_perm!(dest, M::AbstractMatrix, src, dim::Integer)
     order = [dim; setdiff(1:ndims(src), dim)]
     srcp = permutedims(src, order)
     tmp = Array{eltype(dest), 2}(undef, size(dest, dim), div(length(dest), size(dest, dim)))
-    _mul!(tmp, M, reshape(srcp, (size(src,dim), div(length(srcp), size(src,dim)))))
+    mul!(tmp, M, reshape(srcp, (size(src,dim), div(length(srcp), size(src,dim)))))
     iorder = [2:dim; 1; dim+1:ndims(src)]
     permutedims!(dest, reshape(tmp, size(dest)[order]), iorder)
     dest
@@ -37,7 +29,7 @@ storing the result in `dest`. `M` must be an `AbstractMatrix`. This uses an in-p
 function A_mul_B_md!(dest, M::AbstractMatrix, src, dim::Integer)
     check_matmul_sizes(dest, M, src, dim)
     if size(M,1) == size(M,2) == 1
-        return _mul2!(dest, src, M[1,1])
+        return mul!(dest, src, M[1,1])
     end
     R2 = CartesianIndices(size(dest)[dim+1:end])
     if dim > 1
