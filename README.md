@@ -1,6 +1,6 @@
 # AxisAlgorithms
 
-[![Build Status](https://travis-ci.org/timholy/AxisAlgorithms.jl.svg?branch=master)](https://travis-ci.org/timholy/AxisAlgorithms.jl)
+[![CI](https://github.com/timholy/AxisAlgorithms.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/timholy/AxisAlgorithms.jl/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/timholy/AxisAlgorithms.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/timholy/AxisAlgorithms.jl)
 
 AxisAlgorithms is a collection of filtering and linear algebra algorithms for multidimensional arrays.
